@@ -1,0 +1,44 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+
+go_binary(
+    name = "hello",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)
+
+load("@io_bazel_rules_docker//go:image.bzl", "go_image")
+
+go_image(
+    name = "hello_image",
+    binary = ":hello",
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "github.com/cre8ivejp/multi-project/hello",
+    visibility = ["//visibility:private"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["main_test.go"],
+    embed = [":go_default_library"],
+)
+
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+
+# container_image(
+#     name = "container_image_hello",
+#     base = "@distroless_base_image//image",
+#     files = [":hello"]
+# )
+
+container_push(
+    name = "container_push",
+    image = ":hello_image",
+    format = "Docker",
+    registry = "asia.gcr.io",
+    repository = "abematv-bucketeer/hello_image",
+    tag = "0.0.1",
+)
